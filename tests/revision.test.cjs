@@ -48,6 +48,24 @@ test('supporting lessons register in the hub with valid quizzes and unique stabl
   assert.ok(checks.length>=12);
   checks.forEach(q=>assert.ok(q.opts?Number.isInteger(q.a)&&q.a>=0&&q.a<q.opts.length:Number.isFinite(q.a)));
 });
+test('resume reflects another tab without writing its own older lesson back to storage',()=>{
+  const nav=fs.readFileSync(path.join(root,'topic-search.js'),'utf8');
+  const start=nav.indexOf('  const lastKey =');
+  const end=nav.indexOf('  input.addEventListener',start);
+  const data={},resume={dataset:{}},writes=[];
+  const context=vm.createContext({list:[{id:'mu1',unit:'measurements',group:'measurements:f',name:'First'},{id:'mu2',unit:'measurements',group:'measurements:f',name:'Second'}],location:{hash:'#mu1'},resume,plainName:s=>s,store:{get:k=>data[k],set:(k,v)=>{data[k]=v;writes.push([k,v]);}}});
+  vm.runInContext(nav.slice(start,end)+';this.update=updateResume;this.key=lastKey;',context);
+  context.update();
+  assert.equal(data[context.key],'mu1');
+  data[context.key]='mu2';
+  const previousWrites=writes.length;
+  context.update(false);
+  assert.equal(writes.length,previousWrites);
+  assert.equal(resume.dataset.lesson,'mu2');
+  context.location.hash=''; context.update();
+  assert.equal(resume.hidden,false);
+  assert.equal(resume.textContent,'Resume: Second');
+});
 
 if (html.includes('window.MSTEPS=')) {
   const source=html.slice(html.indexOf('function mark(p,lines){\n  // Working'),html.indexOf('\n\n/* ---- the UI ---- */',html.indexOf('function mark(p,lines){\n  // Working')));

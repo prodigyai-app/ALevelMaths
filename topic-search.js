@@ -55,11 +55,12 @@
     }
     results.hidden = !shown.length;
   }
-  function updateResume() {
+  const lastKey = "learn-last-lesson-alevel-maths";
+  function updateResume(remember = true) {
     const id = location.hash.slice(1), current = list.find(p => p.id === id && p.unit && !p.group.startsWith("papers:"));
-    if (current) store.set("learn-last-lesson", current.id);
+    if (current && remember !== false && store.get(lastKey) !== current.id) store.set(lastKey, current.id);
     // Existing visitors already have the most recently opened page in pl-tab.
-    const previous = store.get("learn-last-lesson") || store.get("pl-tab");
+    const previous = store.get(lastKey) || store.get("pl-tab");
     const page = list.find(p => p.id === previous && p.unit && !p.group.startsWith("papers:"));
     resume.hidden = !page;
     if (page) { resume.textContent = `Resume: ${plainName(page.name)}`; resume.dataset.lesson = page.id; }
@@ -75,6 +76,6 @@
   window.addEventListener("popstate", updateResume);
   // LAB.go uses pushState; observe the existing navigation state after it routes.
   new MutationObserver(updateResume).observe(document.body, {attributes:true,attributeFilter:["data-unit"]});
-  window.addEventListener("storage", event => { if (event.key === "learn-last-lesson") updateResume(); });
+  window.addEventListener("storage", event => { if (event.key === lastKey) updateResume(false); });
   updateResume();
 })();
