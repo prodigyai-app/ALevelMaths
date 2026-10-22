@@ -5009,9 +5009,12 @@ FP.paper({id:"fp6",num:6,n:3,set:2,qs});
 </script>
 
 <script src="measurements.js"></script>
+<script src="graph-core.js"></script>
+<script src="graph-plotter.js"></script>
 <script>
 LEARN.unit=null;
 Object.assign(LAB.ICONS,{
+ "u-tools":'<path d="M3 20h18M4 21V3M5 18c4-15 10 8 15-12"/>',
  "u-pure1":'<path d="M4 7l6 10M10 7L4 17"/><path d="M14 9c0-2 6-2 6 0 0 3-6 5-6 8h6"/>',
  "u-pure1b":'<path d="M2 12c2.5-8 5-8 7.5 0s5 8 7.5 0 3.5-5 5-3"/>',
  "u-calc1":'<path d="M3 20h18M4 21V3"/><path d="M5 18c4-12 10-12 15-4" /><path d="M6 8l12 3"/>',
@@ -5027,6 +5030,7 @@ const done=L=>L.filter(p=>LEARN.done.has(p.id)).length;
 const IN="Work through the lessons in order, or jump to any topic. Each lesson sets out the method, shows worked examples written line by line, lets you explore the idea with an interactive graph, then gives gap-fill practice, quick checks and Edexcel-style exam questions with mark schemes. A lesson is ticked off when you get every check question right.";
 const mk=(key,kind,title,sub,desc,groups)=>({key,kind,title,sub,icon:"u-"+key,noun:key==="papers"?"papers":"lessons",listLabel:key==="papers"?"Practice papers":`${title} lessons`,done,desc,intro:IN,groups:groups.map(([g,t])=>[key+":"+g,t])});
 const U0=[
+ mk("tools","Maths toolkit","Graph plotter","Enter and compare your own functions","Plot up to three functions, vary parameters, switch angle units and inspect tables of values.",[["graphing","Graphing workbench"]]),
  mk("measurements","Supporting skills · Revision","Measurements, bounds and modelling","Rounding, limits of accuracy and interpreting measured data",
   "Supporting revision for numerical accuracy and applied modelling: significant figures, error intervals, bounds and the limitations of measured data.",
   [["f","Accuracy, bounds and modelling"]]),
@@ -5282,7 +5286,7 @@ if(!CFG.url||!CFG.key||/PASTE|YOUR/i.test(CFG.url+CFG.key)||!window.supabase) re
 const {$,$$,store}=LAB;
 const sb=window.supabase.createClient(CFG.url,CFG.key,{auth:{persistSession:true,autoRefreshToken:true,storageKey:"alp-auth"}});
 const DOMAIN=CFG.emailDomain||"accounts.physicsalevel.prodigyai.uk";
-const SITES={"alevel-physics":["A Level Physics","physicsalevel.prodigyai.uk"],"gcse-physics":["GCSE Physics","physicsgcse.prodigyai.uk"],"gcse-maths":["GCSE Maths","mathsgcse.prodigyai.uk"],"gcse-chemistry":["GCSE Chemistry","chemistrygcse.prodigyai.uk"],"alevel-chemistry":["A Level Chemistry","chemistryalevel.prodigyai.uk"],"alevel-maths":["A Level Maths","mathsalevel.prodigyai.uk"],"gcse-biology":["GCSE Biology","biologygcse.prodigyai.uk"],"alevel-biology":["A Level Biology","biologyalevel.prodigyai.uk"],"gcse-combined":["Combined Science","combinedsciencegcse.prodigyai.uk"],"alevel-psychology":["A Level Psychology","prodigyai-app.github.io/ALevelPsychology/"]};
+const SITES={"alevel-physics":["A Level Physics","physicsalevel.prodigyai.uk"],"gcse-physics":["GCSE Physics","physicsgcse.prodigyai.uk"],"gcse-maths":["GCSE Maths","mathsgcse.prodigyai.uk"],"gcse-chemistry":["GCSE Chemistry","chemistrygcse.prodigyai.uk"],"alevel-chemistry":["A Level Chemistry","chemistryalevel.prodigyai.uk"],"alevel-maths":["A Level Maths","mathsalevel.prodigyai.uk"],"gcse-biology":["GCSE Biology","biologygcse.prodigyai.uk"],"alevel-biology":["A Level Biology","biologyalevel.prodigyai.uk"],"gcse-combined":["Combined Science","combinedsciencegcse.prodigyai.uk"],"alevel-psychology":["A Level Psychology","psychologyalevel.prodigyai.uk"],"alevel-sociology":["A Level Sociology","sociologyalevel.prodigyai.uk"]};
 const SITE=window.ALP_SITE&&SITES[window.ALP_SITE]?window.ALP_SITE:"alevel-physics", SITENAME=SITES[SITE][0];
 const isSync=k=>/^learn-/.test(k)||/^maths-/.test(k)||/^pl-.*-runs$/.test(k)||k==="alp-activity";
 const SPECIAL=new Set(["learn-motion-done","learn-check-state","learn-motion-exam","alp-activity"]);
@@ -5460,6 +5464,7 @@ window.ALP_ACCOUNTS={sb,merge,stats,get user(){ return user; },get profile(){ re
 })();
 </script>
 
+<script src="course-links.js"></script>
 <script src="assessment-core.js"></script>
 <script src="assignments.js"></script>
 </body></html>
