@@ -3,7 +3,8 @@
  'use strict';
  const names=new Set(['sin','cos','tan','asin','acos','atan','sinh','cosh','tanh','sec','cosec','csc','cot','sqrt','abs','exp','ln','log','floor','ceil']);
  function compile(input){
-  const s=String(input).trim().replace(/^y\s*=\s*/i,'').toLowerCase().replace(/[−–]/g,'-').replace(/×/g,'*').replace(/÷/g,'/').replace(/π/g,'pi').replace(/√/g,'sqrt').replace(/\*\*/g,'^').replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻]+/g,t=>'^'+[...t].map(c=>'⁰¹²³⁴⁵⁶⁷⁸⁹'.includes(c)?'⁰¹²³⁴⁵⁶⁷⁸⁹'.indexOf(c):'-').join(''));
+  const notation=typeof module==='object'&&module.exports?require('./math-notation.js'):window.ProdigyMathNotation;
+  const s=notation.normaliseMath(input).trim().replace(/^y\s*=\s*/i,'').toLowerCase();
   if(!s||s.length>250)throw Error('Enter a function of x, up to 250 characters.');
   const tokens=[];let pos=0;
   while(pos<s.length){const ch=s[pos];if(/\s/.test(ch)){pos++;continue;}const n=s.slice(pos).match(/^(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?/);if(n){tokens.push({number:Number(n[0])});pos+=n[0].length;continue;}const word=s.slice(pos).match(/^[a-z]+/);if(word){const w=word[0];if(names.has(w)||['x','a','b','c','pi','e'].includes(w))tokens.push(w);else if(/^[xabc]+$/.test(w))tokens.push(...w);else throw Error('Unknown name: '+w+'. Use x, a, b, c and the listed functions.');pos+=w.length;continue;}if('+-*/^()'.includes(ch)){tokens.push(ch);pos++;continue;}throw Error('Unsupported character: '+ch);}
