@@ -4461,10 +4461,10 @@ lesson({id:"m5",group:"b",num:5,lvl:"Mechanics · Lesson 5",name:"Friction and i
 function draw(){ const td=val("m5-t"), mu=val("m5-mu"), m=val("m5-m"), t=td*Math.PI/180; set("m5-t-l",td+"°"); set("m5-mu-l",r(mu,2)); set("m5-m-l",m);
   const W=m*g*Math.sin(t), R=m*g*Math.cos(t), Fm=mu*R, a=W>Fm?(W-Fm)/m:0;
   const x0=40, y0=270, L=Math.min(440,240/Math.tan(t)), x1=x0+L, y1=y0-L*Math.tan(t), ang=Math.atan2(y0-y1,x1-x0), cx=x0+L*0.55, cy=y0-(y0-y1)*0.55, s=46, dx=Math.cos(ang), dy=-Math.sin(ang), nx=dy, ny=-dx;
-  const bc=[cx+nx*s/2,cy+ny*s/2], ar=(x,y,X,Y,c)=>`<line x1="${x}" y1="${y}" x2="${X}" y2="${Y}" stroke="${c}" stroke-width="3"/><circle cx="${X}" cy="${Y}" r="4" fill="${c}"/>`;
+  const bc=[cx+nx*s/2,cy+ny*s/2], ar=(x,y,X,Y,c,t)=>{const an=Math.atan2(Y-y,X-x),hx=X-10*Math.cos(an),hy=Y-10*Math.sin(an),px=-Math.sin(an)*5,py=Math.cos(an)*5;return `<line x1="${x}" y1="${y}" x2="${hx}" y2="${hy}" stroke="${c}" stroke-width="3"/><path d="M${X} ${Y}L${hx+px} ${hy+py}L${hx-px} ${hy-py}Z" fill="${c}"/>`+(t?`<text class="lab" x="${X+12*Math.cos(an)}" y="${Y+12*Math.sin(an)+5}" text-anchor="middle" fill="${c}">${t}</text>`:"");};
   let sv=`<polygon points="${x0},${y0} ${x1},${y0} ${x1},${y1}" class="f4" opacity=".25"/><line class="ax" x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}"/>`;
   sv+=`<g transform="rotate(${-ang*180/Math.PI} ${cx} ${cy})"><rect x="${cx-s/2}" y="${cy-s}" width="${s}" height="${s}" class="f0" rx="4"/></g>`;
-  sv+=ar(bc[0],bc[1],bc[0],bc[1]+70,"var(--muted)")+ar(bc[0],bc[1],bc[0]+nx*60,bc[1]+ny*60,"var(--data)")+(Fm>0?ar(bc[0],bc[1],bc[0]+dx*Math.min(70,20+Fm*2),bc[1]+dy*Math.min(70,20+Fm*2),"var(--good)"):"");
+  sv+=ar(bc[0],bc[1],bc[0],bc[1]+70,"var(--muted)","mg")+ar(bc[0],bc[1],bc[0]+nx*60,bc[1]+ny*60,"var(--data)","R")+(Fm>0?ar(bc[0],bc[1],bc[0]+dx*Math.min(70,20+Fm*2),bc[1]+dy*Math.min(70,20+Fm*2),"var(--good)","F"):"");
   sv+=`<text class="lab" x="${x1-60}" y="${y0-10}">θ = ${td}°</text>`;
   LAB.$("#m5-svg").innerHTML=sv; set("m5-w",r(W,2)+" N"); set("m5-f",r(Fm,2)+" N"); set("m5-a",r(a,3)+" m s⁻²");
   set("m5-note",W>Fm?`mg sin θ > μR: the block slides with a = g sin θ − μg cos θ = ${r(a,3)} m s⁻².`:`mg sin θ ≤ μR: friction ${r(W,2)} N holds the block at rest${Math.abs(W-Fm)<0.05?" (limiting equilibrium)":""}. Slipping starts at θ = ${r(Math.atan(mu)*180/Math.PI,1)}°.`); }
@@ -4509,7 +4509,7 @@ lesson({id:"m7",group:"b",num:6,lvl:"Mechanics · Lesson 6",name:"Statics and eq
  ],onShow:()=>draw()});
 function draw(){ const ad=val("m7-a"), bd=val("m7-b"), m=val("m7-m"), a=ad*Math.PI/180, b=bd*Math.PI/180; set("m7-a-l",ad+"°"); set("m7-b-l",bd+"°"); set("m7-m-l",r(m,1));
   const W=m*g, T1=W*Math.cos(b)/Math.sin(a+b), T2=W*Math.cos(a)/Math.sin(a+b);
-  const kx=260, ky=170, L1=Math.min(200,140/Math.sin(a)), L2=Math.min(200,140/Math.sin(b)), ax=kx-L1*Math.cos(a), ay=ky-L1*Math.sin(a), bx=kx+L2*Math.cos(b), by=ky-L2*Math.sin(b);
+  const kx=260, ky=170, hh=Math.min(140,230*Math.tan(a),230*Math.tan(b)), L1=hh/Math.sin(a), L2=hh/Math.sin(b), ax=kx-L1*Math.cos(a), ay=ky-L1*Math.sin(a), bx=kx+L2*Math.cos(b), by=ky-L2*Math.sin(b);
   let s=`<line x1="${Math.min(ax,40)}" y1="${Math.min(ay,by)}" x2="${Math.max(bx,480)}" y2="${Math.min(ay,by)}" class="ax"/><line x1="${kx}" y1="${ky}" x2="${ax}" y2="${ay}" stroke="var(--accent)" stroke-width="3"/><line x1="${kx}" y1="${ky}" x2="${bx}" y2="${by}" stroke="var(--data)" stroke-width="3"/><line x1="${kx}" y1="${ky}" x2="${kx}" y2="${ky+40}" stroke="var(--ink)" stroke-width="2"/><rect x="${kx-20}" y="${ky+40}" width="40" height="40" class="f4" opacity=".7" rx="4"/><text class="lab" x="${kx+28}" y="${ky+66}">${r(W,1)} N</text>`;
   s+=`<text class="lab t0" x="${(kx+ax)/2-10}" y="${(ky+ay)/2+18}" text-anchor="end">T₁</text><text class="lab t1" x="${(kx+bx)/2+10}" y="${(ky+by)/2+18}">T₂</text>`;
   LAB.$("#m7-svg").innerHTML=s; set("m7-t1",r(T1,2)+" N"); set("m7-t2",r(T2,2)+" N"); set("m7-note",`T₁ cos α = T₂ cos β and T₁ sin α + T₂ sin β = ${r(W,1)} N. The steeper string carries more of the weight.`); }
@@ -4558,7 +4558,7 @@ function draw(){ const w=val("m4-w"), x=val("m4-x"); set("m4-w-l",w); set("m4-x-
   let s=`<rect x="${X(0)}" y="100" width="400" height="16" rx="3" class="f1" opacity=".65"/><polygon points="${X(0)},116 ${X(0)-14},146 ${X(0)+14},146" class="f4"/><polygon points="${X(3)},116 ${X(3)-14},146 ${X(3)+14},146" class="f4"/><text class="lab" x="${X(0)}" y="166" text-anchor="middle">A</text><text class="lab" x="${X(3)}" y="166" text-anchor="middle">C</text><text class="lab" x="${X(4)}" y="136" text-anchor="middle">B</text>`;
   s+=`<line x1="${X(2)}" y1="116" x2="${X(2)}" y2="180" stroke="var(--muted)" stroke-width="2" stroke-dasharray="4 3"/><text class="lab" x="${X(2)}" y="196" text-anchor="middle">20g</text>`;
   if(w>0) s+=`<rect x="${X(x)-14}" y="${100-28}" width="28" height="28" rx="3" class="f0"/><text class="lab t0" x="${X(x)}" y="60" text-anchor="middle">${w} kg</text>`;
-  s+=`<line x1="${X(0)}" y1="96" x2="${X(0)}" y2="${96-Math.max(0,Math.min(80,Ra/6))}" stroke="var(--good)" stroke-width="3"/><line x1="${X(3)}" y1="96" x2="${X(3)}" y2="${96-Math.min(80,Rc/6)}" stroke="var(--good)" stroke-width="3"/>`;
+  s+=`<line x1="${X(0)}" y1="96" x2="${X(0)}" y2="${96-Math.max(0,Math.min(80,Ra/6))}" stroke="var(--good)" stroke-width="3"/><line x1="${X(3)}" y1="96" x2="${X(3)}" y2="${96-Math.min(80,Rc/6)}" stroke="var(--good)" stroke-width="3"/><text class="lab" x="${X(0)+8}" y="${Math.min(90,92-Math.max(0,Math.min(80,Ra/6)))}" fill="var(--good)">R<tspan dy="4" font-size="9">A</tspan></text><text class="lab" x="${X(3)-8}" y="${92-Math.min(80,Rc/6)}" text-anchor="end" fill="var(--good)">R<tspan dy="4" font-size="9">C</tspan></text>`;
   LAB.$("#m4-svg").innerHTML=s; set("m4-ra",Ra>=-1e-9?r(Ra,1)+" N":"tilts"); set("m4-rc",Ra>=-1e-9?r(Rc,1)+" N":"tilts");
   set("m4-note",Ra<-1e-9?`R_A would be negative: the beam tilts about C. Limit: ${w} × (x − 3) = 20, i.e. x = ${w?r(3+20/w,2):"—"} m.`:Ra<0.5?"On the point of tilting about C (R_A = 0).":`Moments about A: 3R_C = 20g × 2 + ${w}g × ${r(x,1)}.`); }
 on(["m4-w","m4-x"],draw); draw();
