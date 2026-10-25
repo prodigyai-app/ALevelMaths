@@ -1499,17 +1499,29 @@ window.MGRAPH=1;
 
 /* hand-drawn axes and curves: o={w,h,x:[min,max],y:[min,max],fns:[[f,cls]],pts:[[x,y,label]],step:1,lab:true} */
 function graph(o){ const w=o.w||300,h=o.h||240,[x0,x1]=o.x,[y0,y1]=o.y,pad=o.pad||24,padL=o.padL||(Math.max(Math.abs(y0),Math.abs(y1))>=100&&x0>=0?40:24),X=x=>padL+(x-x0)/(x1-x0)*(w-padL-pad),Y=y=>h-pad-(y-y0)/(y1-y0)*(h-2*pad); let g="";
+  /* label placement: keep every label inside the diagram and clear of the others */
+  const boxes=[], tw=(t,s)=>String(t).replace(/<[^>]+>/g,"").length*s*.56;
+  const bx=(x,y,t,s,a)=>{ const W=tw(t,s), l=a==="end"?x-W:a==="middle"?x-W/2:x; return [l,y-s*.82,l+W,y+s*.28]; };
+  const hit=(B)=>boxes.some(c=>B[0]<c[2]-1&&B[2]>c[0]+1&&B[1]<c[3]-1&&B[3]>c[1]+1);
+  const inside=B=>B[0]>=1&&B[2]<=w-1&&B[1]>=1&&B[3]<=h-1;
+  const put=(cands,t,s,c)=>{ let pick=cands.find(([x,y,a])=>{ const B=bx(x,y,t,s,a); return inside(B)&&!hit(B); })||cands.find(([x,y,a])=>inside(bx(x,y,t,s,a)));
+    if(!pick){ let [x,y,a]=cands[0]; const B=bx(x,y,t,s,a); if(B[2]>w-2){ x-=B[2]-(w-2); } if(B[0]<2){ x+=2-B[0]; } if(B[1]<2) y+=2-B[1]; if(B[3]>h-2) y-=B[3]-(h-2); pick=[x,y,a]; }
+    const [x,y,a]=pick; boxes.push(bx(x,y,t,s,a)); return tx(+x.toFixed(1),+y.toFixed(1),t,{c,s,a}); };
   (o.fills||[]).forEach(([P,col])=>{ g+=`<path d="M${P.map(([x,y])=>X(x).toFixed(1)+" "+Y(y).toFixed(1)).join(" L")} Z" style="fill:${col||"rgba(217,102,26,.2)"};stroke:none"/>`; });
   const st=o.step||1, lst=o.lstep||st, yst=o.ystep||st, ylst=o.ylstep||o.ystep||lst;
   if(x0<=0&&x1>=0) g+=ln(X(0),Y(y0),X(0),Y(y1)); if(y0<=0&&y1>=0) g+=ln(X(x0),Y(0),X(x1),Y(0));
   const ax=y0<=0&&y1>=0?Y(0):Y(y0), ay=x0<=0&&x1>=0?X(0):X(x0);
-  for(let x=Math.ceil(x0/st)*st;x<=x1+1e-9;x+=st){ if(Math.abs(x)<1e-9) continue; g+=`<path class="pen" d="M${X(x).toFixed(1)} ${ax-3} v6"/>`; if(o.lab!==false&&Math.abs(Math.round(x/lst)*lst-x)<1e-9) g+=tx(X(x),ax+18,+x.toFixed(2),{s:14}); }
-  for(let y=Math.ceil(y0/yst)*yst;y<=y1+1e-9;y+=yst){ if(Math.abs(y)<1e-9) continue; g+=`<path class="pen" d="M${ay-3} ${Y(y).toFixed(1)} h6"/>`; if(o.lab!==false&&Math.abs(Math.round(y/ylst)*ylst-y)<1e-9) g+=tx(ay-8,Y(y)+5,+y.toFixed(2),{s:14,a:"end"}); }
-  g+=tx(X(x1)-6,ax-8,o.xl||"x",{s:16,a:o.xl?"end":"middle"})+tx(ay+10,Y(y1)+12,o.yl||"y",{s:16,a:"start"});
-  (o.fns||[]).forEach(([f,cls,lab])=>{ let d="",on=false; for(let i=0;i<=200;i++){ const x=x0+(x1-x0)*i/200, y=f(x); if(!isFinite(y)||y<y0-1e-9||y>y1+1e-9){ on=false; continue; } d+=(on?"L":"M")+X(x).toFixed(1)+" "+Y(y).toFixed(1); on=true; } g+=`<path class="${cls||"pen"}" d="${d}"/>`; if(lab) g+=tx(lab[0]!=null?X(lab[0]):0,Y(lab[1]),lab[2],{c:cls==="pen2"?"hwt2":"hwt",s:16,a:"start"}); });
-  (o.polys||[]).forEach(([P,cls,closed])=>{ g+=poly(P.map(([x,y])=>[X(x),Y(y)]),closed!==false,cls||"pen"); });
-  (o.texts||[]).forEach(([x,y,t,c])=>{ g+=tx(X(x),Y(y),t,{c:c||"hwt2",s:15}); });
-  (o.pts||[]).forEach(([x,y,l,c,pos])=>{ g+=`<circle cx="${X(x).toFixed(1)}" cy="${Y(y).toFixed(1)}" r="3.5" class="pfill"/>`; if(l){ const R=X(x)>w-70; g+=tx(X(x)+(R?-8:8),Y(y)+(pos==="below"?20:-8),l,{c:c||"hwt2",s:15,a:R?"end":"start"}); } });
+  boxes.push([X(x0),ax-1.5,X(x1),ax+1.5],[ay-1.5,Y(y1),ay+1.5,Y(y0)]);
+  const xl=o.xl||"x", yl=o.yl||"y", xlb=bx(X(x1)-6,ax-8,xl,16,o.xl?"end":"middle"), ylb=bx(ay+10,Y(y1)+12,yl,16,"start");
+  for(let x=Math.ceil(x0/st)*st;x<=x1+1e-9;x+=st){ if(Math.abs(x)<1e-9) continue; g+=`<path class="pen" d="M${X(x).toFixed(1)} ${ax-3} v6"/>`; if(o.lab!==false&&Math.abs(Math.round(x/lst)*lst-x)<1e-9){ const t=+x.toFixed(2), B=bx(X(x),ax+18,t,14,"middle"); if(B[2]<=w&&B[0]>=0){ boxes.push(B); g+=tx(X(x),ax+18,t,{s:14}); } } }
+  for(let y=Math.ceil(y0/yst)*yst;y<=y1+1e-9;y+=yst){ if(Math.abs(y)<1e-9) continue; g+=`<path class="pen" d="M${ay-3} ${Y(y).toFixed(1)} h6"/>`; if(o.lab!==false&&Math.abs(Math.round(y/ylst)*ylst-y)<1e-9){ const t=+y.toFixed(2), B=bx(ay-8,Y(y)+5,t,14,"end"); if(B[0]>=0&&!(B[1]<xlb[3]&&B[3]>xlb[1]&&B[0]<xlb[2]&&B[2]>xlb[0])){ boxes.push(B); g+=tx(ay-8,Y(y)+5,t,{s:14,a:"end"}); } } }
+  boxes.push(xlb,ylb); g+=tx(X(x1)-6,ax-8,xl,{s:16,a:o.xl?"end":"middle"})+tx(ay+10,Y(y1)+12,yl,{s:16,a:"start"});
+  const labs=[];
+  (o.fns||[]).forEach(([f,cls,lab])=>{ let d="",on=false; for(let i=0;i<=200;i++){ const x=x0+(x1-x0)*i/200, y=f(x); if(!isFinite(y)||y<y0-1e-9||y>y1+1e-9){ on=false; continue; } d+=(on?"L":"M")+X(x).toFixed(1)+" "+Y(y).toFixed(1); on=true; } g+=`<path class="${cls||"pen"}" d="${d}"/>`; for(let i=0;i<=120;i++){ const x=x0+(x1-x0)*i/120, y=f(x); if(isFinite(y)&&y>=y0&&y<=y1) boxes.push([X(x)-2.5,Y(y)-2.5,X(x)+2.5,Y(y)+2.5]); } if(lab) labs.push(()=>{ const x=lab[0]!=null?X(lab[0]):0, y=Y(lab[1]), C=[]; for(const dy of [0,-16,18,-32,34,-48,50]) for(const [dx,a] of [[0,"start"],[0,"end"],[30,"start"],[-30,"end"],[70,"start"],[-70,"end"],[110,"start"]]) C.push([x+dx,y+dy,a]); return put(C,lab[2],16,cls==="pen2"?"hwt2":"hwt"); }); });
+  (o.polys||[]).forEach(([P,cls,closed])=>{ const Q=P.map(([x,y])=>[X(x),Y(y)]); g+=poly(Q,closed!==false,cls||"pen"); Q.forEach((q,i)=>{ const r=Q[(i+1)%Q.length]; if(i===Q.length-1&&closed===false) return; const n=Math.max(1,Math.ceil(Math.hypot(r[0]-q[0],r[1]-q[1])/6)); for(let k=0;k<=n;k++){ const x=q[0]+(r[0]-q[0])*k/n, y=q[1]+(r[1]-q[1])*k/n; boxes.push([x-2,y-2,x+2,y+2]); } }); });
+  (o.pts||[]).forEach(([x,y,l,c,pos])=>{ g+=`<circle cx="${X(x).toFixed(1)}" cy="${Y(y).toFixed(1)}" r="3.5" class="pfill"/>`; boxes.push([X(x)-4,Y(y)-4,X(x)+4,Y(y)+4]); if(l){ const px=X(x),py=Y(y),c2=c||"hwt2"; labs.push(()=>{ const N=[[px+8,py-8,"start"],[px-8,py-8,"end"]], S=[[px+8,py+20,"start"],[px-8,py+20,"end"]], R=px>w-70; let cs=pos==="below"?[...S,...N]:[...N,...S]; if(R) cs=cs.slice().sort((a,b)=>(a[2]==="end"?0:1)-(b[2]==="end"?0:1)); return put(cs.concat([[px,py-12,"middle"],[px,py+24,"middle"],[px+14,py+5,"start"],[px-14,py+5,"end"],[px+8,py-24,"start"],[px-8,py-24,"end"],[px+8,py+36,"start"],[px-8,py+36,"end"]]),l,15,c2); }); } });
+  (o.texts||[]).forEach(([x,y,t,c])=>{ const px=X(x),py=Y(y); labs.push(()=>put([[px,py,"middle"],[px,py-16,"middle"],[px,py+18,"middle"],[px+10,py,"start"],[px-10,py,"end"]],t,15,c||"hwt2")); });
+  labs.forEach(f=>{ g+=f(); });
   return svg(w,h,g); }
 return {restoreHelp,rescoreFill:()=>document.querySelectorAll(".lcard.fill").forEach(score),graph,check:chk,HT,NC,CA,eb,hand,tech,fill:fillReg,restore,ln,poly,tx,circ,svg,ang,right,fr,sq,same};
 })();
@@ -1692,6 +1704,11 @@ const deriv=(f,x,h=1e-5)=>(f(x+h)-f(x-h))/(2*h);
    o={W,H,x:[a,b],y:[c,d],xs,ys,grid,fns:[{f,c,dash,lab,lx}],par:[{fx,fy,t:[a,b],c}],pts:[{x,y,lab,c,dx,dy}],segs:[{x1,y1,x2,y2,c,dash}],shade:[{f,g,a,b,c}],rects:[{x,y,w,h,c}],texts:[{x,y,t,c,a}],xl,yl,aria} */
 function plot(o){ const W=o.W||520,H=o.H||340,ml=o.ml||40,mr=o.mr||16,mt=o.mt||14,mb=o.mb||30,pw=W-ml-mr,ph=H-mt-mb; const [x0,x1]=o.x,[y0,y1]=o.y;
   const X=x=>ml+(x-x0)/(x1-x0)*pw, Y=y=>mt+(y1-y)/(y1-y0)*ph, cl=v=>Math.max(-1e4,Math.min(1e4,v)); let g="";
+  /* label placement: labels stay inside the plot and clear of tick labels, curves and each other */
+  const boxes=[], twd=(t,s,m)=>String(t).length*s*(m?.62:.56), bx=(x,y,t,s,a,m)=>{ const ww=twd(t,s,m), l=a==="end"?x-ww:a==="middle"?x-ww/2:x; return [l,y-s*.82,l+ww,y+s*.28]; };
+  const hit=B=>boxes.some(c=>B[0]<c[2]-1&&B[2]>c[0]+1&&B[1]<c[3]-1&&B[3]>c[1]+1), inside=B=>B[0]>=1&&B[2]<=W-1&&B[1]>=1&&B[3]<=H-1;
+  const put=(cands,t,s)=>{ const p=cands.find(([x,y,a])=>{ const B=bx(x,y,t,s,a); return inside(B)&&!hit(B); })||cands.find(([x,y,a])=>inside(bx(x,y,t,s,a)))||cands[0]; boxes.push(bx(p[0],p[1],t,s,p[2])); return p; };
+  const near=(x,y,a)=>{ const C=[[x,y,a]]; for(const dy of [0,16,-16,30,-30]) for(const [dx,aa] of [[0,a],[a==="end"?16:-16,a==="end"?"start":"end"],[36,"start"],[-36,"end"]]) C.push([x+dx,y+dy,aa]); return C; };
   const xs=o.xs||nice(x1-x0), ys=o.ys||nice(y1-y0), dec=s=>s<1?(String(+s.toFixed(6)).split(".")[1]||"").length:0;
   const ax=y0<=0&&y1>=0?Y(0):Y(y0), ay=x0<=0&&x1>=0?X(0):X(x0);
   const lx=Math.max(1,Math.ceil(36/(pw*xs/(x1-x0)))), ly=Math.max(1,Math.ceil(17/(ph*ys/(y1-y0)))), on=(v,st,k)=>Math.abs(Math.round(v/st)%k)===0;
@@ -1700,17 +1717,21 @@ function plot(o){ const W=o.W||520,H=o.H||340,ml=o.ml||40,mr=o.mr||16,mt=o.mt||1
   g+=`<line class="ax" x1="${ml}" y1="${ax}" x2="${ml+pw}" y2="${ax}"/><line class="ax" x1="${ay}" y1="${mt}" x2="${ay}" y2="${mt+ph}"/>`;
   if(y0<=0&&y1>=0&&x0<=0&&x1>=0) g+=`<text class="tk" x="${ay-5}" y="${ax+14}" text-anchor="end">O</text>`;
   g+=`<text class="lab" x="${ml+pw-2}" y="${ax-6}" text-anchor="end" font-style="italic">${o.xl||"x"}</text><text class="lab" x="${ay+6}" y="${mt+12}" font-style="italic">${o.yl||"y"}</text>`;
+  for(const m of g.matchAll(/<text class="(tk|lab)[^"]*" x="([-\d.]+)" y="([-\d.]+)" text-anchor="(\w+)"[^>]*>([^<]*)<\/text>/g)) boxes.push(bx(+m[2],+m[3],m[5],m[1]==="tk"?11:13,m[4],m[1]==="tk"));
+  boxes.push([ml,ax-1.5,ml+pw,ax+1.5],[ay-1.5,mt,ay+1.5,mt+ph]);
+  const mark=(x,y)=>{ if(x>=ml&&x<=ml+pw&&y>=mt&&y<=mt+ph) boxes.push([x-2.5,y-2.5,x+2.5,y+2.5]); };
   const clip=`amc${++cid}`; g+=`<defs><clipPath id="${clip}"><rect x="${ml}" y="${mt}" width="${pw}" height="${ph}"/></clipPath></defs><g clip-path="url(#${clip})">`;
   (o.rects||[]).forEach(q=>{ g+=`<rect x="${X(q.x).toFixed(1)}" y="${Y(q.y+q.h).toFixed(1)}" width="${(X(q.x+q.w)-X(q.x)).toFixed(1)}" height="${(Y(q.y)-Y(q.y+q.h)).toFixed(1)}" class="${q.cls||"sh1"}" stroke="var(--data)" stroke-width="1"/>`; });
   (o.shade||[]).forEach(s=>{ const n=120, P=[]; for(let i=0;i<=n;i++){ const x=s.a+(s.b-s.a)*i/n; P.push([X(x),Y(cl(s.f(x)))]); } for(let i=n;i>=0;i--){ const x=s.a+(s.b-s.a)*i/n; P.push([X(x),Y(cl(s.g?s.g(x):0))]); } g+=`<path class="${s.cls||"sh0"}" d="M${P.map(p=>p[0].toFixed(1)+" "+p[1].toFixed(1)).join("L")}Z"/>`; });
   (o.fns||[]).forEach((F,k)=>{ const n=F.n||500, a=F.a??x0, b=F.b??x1; let d="", on=false, prev=null;
-    for(let i=0;i<=n;i++){ const x=a+(b-a)*i/n, y=F.f(x); if(!isFinite(y)||Math.abs(y)>1e6||(prev!=null&&Math.abs(y-prev)>(y1-y0)*3)){ on=false; prev=isFinite(y)?y:null; continue; } d+=(on?"L":"M")+X(x).toFixed(1)+" "+Y(cl(y)).toFixed(1); on=true; prev=y; }
+    for(let i=0;i<=n;i++){ const x=a+(b-a)*i/n, y=F.f(x); if(!isFinite(y)||Math.abs(y)>1e6||(prev!=null&&Math.abs(y-prev)>(y1-y0)*3)){ on=false; prev=isFinite(y)?y:null; continue; } d+=(on?"L":"M")+X(x).toFixed(1)+" "+Y(cl(y)).toFixed(1); on=true; prev=y; if(i%4===0) mark(X(x),Y(cl(y))); }
     g+=`<path class="fn c${F.c??k}${F.dash?" dash":""}" d="${d}"${F.w?` style="stroke-width:${F.w}"`:""}/>`; });
-  (o.par||[]).forEach((F,k)=>{ const n=F.n||500, [a,b]=F.t; let d=""; for(let i=0;i<=n;i++){ const t=a+(b-a)*i/n; d+=(i?"L":"M")+X(F.fx(t)).toFixed(1)+" "+Y(cl(F.fy(t))).toFixed(1); } g+=`<path class="fn c${F.c??k}${F.dash?" dash":""}" d="${d}"/>`; });
-  (o.segs||[]).forEach(s=>{ g+=`<line class="fn c${s.c??4}${s.dash?" dash":""}" x1="${X(s.x1).toFixed(1)}" y1="${Y(s.y1).toFixed(1)}" x2="${X(s.x2).toFixed(1)}" y2="${Y(s.y2).toFixed(1)}" style="stroke-width:${s.w||2}"/>`; });
+  (o.par||[]).forEach((F,k)=>{ const n=F.n||500, [a,b]=F.t; let d=""; for(let i=0;i<=n;i++){ const t=a+(b-a)*i/n; d+=(i?"L":"M")+X(F.fx(t)).toFixed(1)+" "+Y(cl(F.fy(t))).toFixed(1); if(i%4===0) mark(X(F.fx(t)),Y(cl(F.fy(t)))); } g+=`<path class="fn c${F.c??k}${F.dash?" dash":""}" d="${d}"/>`; });
+  (o.segs||[]).forEach(s=>{ for(let k=0;k<=20;k++) mark(X(s.x1+(s.x2-s.x1)*k/20),Y(s.y1+(s.y2-s.y1)*k/20)); g+=`<line class="fn c${s.c??4}${s.dash?" dash":""}" x1="${X(s.x1).toFixed(1)}" y1="${Y(s.y1).toFixed(1)}" x2="${X(s.x2).toFixed(1)}" y2="${Y(s.y2).toFixed(1)}" style="stroke-width:${s.w||2}"/>`; });
   g+=`</g>`;
-  (o.fns||[]).forEach((F,k)=>{ if(F.lab){ const x=F.lx??(x0+(x1-x0)*.85), y=F.f(x); if(isFinite(y)&&y>=y0&&y<=y1){ const R=X(x)>ml+pw*.62; g+=`<text class="lab t${F.c??k}" x="${(X(x)+(R?-8:6)).toFixed(1)}" y="${(Y(y)-6).toFixed(1)}" text-anchor="${R?"end":"start"}" font-weight="600">${svgT(F.lab)}</text>`; } } });
-  (o.pts||[]).forEach(p=>{ if(p.x<x0||p.x>x1||p.y<y0||p.y>y1) return; g+=`<circle cx="${X(p.x).toFixed(1)}" cy="${Y(p.y).toFixed(1)}" r="${p.r||4.5}" class="f${p.c??0}"${p.open?` style="fill:var(--panel);stroke:var(--accent);stroke-width:2"`:""}/>`; if(p.lab) g+=`<text class="lab" x="${(X(p.x)+(p.dx??8)).toFixed(1)}" y="${(Y(p.y)+(p.dy??-8)).toFixed(1)}" text-anchor="${p.a||"start"}">${svgT(p.lab)}</text>`; });
+  (o.fns||[]).forEach((F,k)=>{ if(F.lab){ const x=F.lx??(x0+(x1-x0)*.85), y=F.f(x); if(isFinite(y)&&y>=y0&&y<=y1){ const R=X(x)>ml+pw*.62, t=svgT(F.lab), [px,py,pa]=put(near(X(x)+(R?-8:6),Y(y)-6,R?"end":"start"),t,13); g+=`<text class="lab t${F.c??k}" x="${px.toFixed(1)}" y="${py.toFixed(1)}" text-anchor="${pa}" font-weight="600">${t}</text>`; } } });
+  (o.pts||[]).forEach(p=>{ if(p.x>=x0&&p.x<=x1&&p.y>=y0&&p.y<=y1) boxes.push([X(p.x)-5,Y(p.y)-5,X(p.x)+5,Y(p.y)+5]); });
+  (o.pts||[]).forEach(p=>{ if(p.x<x0||p.x>x1||p.y<y0||p.y>y1) return; g+=`<circle cx="${X(p.x).toFixed(1)}" cy="${Y(p.y).toFixed(1)}" r="${p.r||4.5}" class="f${p.c??0}"${p.open?` style="fill:var(--panel);stroke:var(--accent);stroke-width:2"`:""}/>`; if(p.lab){ const t=svgT(p.lab), x=X(p.x), y=Y(p.y), a=p.a||"start", dx=p.dx??8, dy=p.dy??-8; const C=[[x+dx,y+dy,a],[x-dx,y+dy,a==="start"?"end":a==="end"?"start":a],[x+dx,y+20,a],[x-dx,y+20,a==="start"?"end":a],[x,y-14,"middle"],[x,y+24,"middle"]]; const [px,py,pa]=put(C,t,13); g+=`<text class="lab" x="${px.toFixed(1)}" y="${py.toFixed(1)}" text-anchor="${pa}">${t}</text>`; } });
   (o.texts||[]).forEach(t=>{ g+=`<text class="lab${t.c!=null?" t"+t.c:""}" x="${X(t.x).toFixed(1)}" y="${Y(t.y).toFixed(1)}" text-anchor="${t.a||"middle"}"${t.s?` style="font-size:${t.s}px"`:""}>${svgT(t.t)}</text>`; });
   return `<svg class="amplot" viewBox="0 0 ${W} ${H}" role="img" aria-label="${o.aria||"Graph"}">${g}${o.extra?o.extra(X,Y):""}</svg>`; }
 let cid=0;
@@ -5366,5 +5387,7 @@ window.ALP_ACCOUNTS={sb,merge,stats,get user(){ return user; },get profile(){ re
 <script src="assessment-core.js?v=20261023-ks3"></script>
 <script src="assignments.js?v=20261023-ks3"></script>
 <link rel="stylesheet" href="simple-layout.css?v=20261024-desktop">
+<link rel="stylesheet" href="diagram-fit.css?v=20261025-diagrams">
 <script src="simple-layout.js?v=20261024-all"></script>
+<script src="diagram-fit.js?v=20261025-diagrams"></script>
 </body></html>
