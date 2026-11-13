@@ -2,7 +2,7 @@
 <html lang="en">
 <meta charset="utf-8">
 <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20261023-ks3">
-<link rel="stylesheet" href="maths-keyboard.css?v=20261022-keyboard">
+<link rel="stylesheet" href="maths-keyboard.css?v=20261113-contrast">
 <script src="math-notation.js?v=20261022-keyboard"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="numeric-tools.js?v=20261022-keyboard"></script>
@@ -4047,7 +4047,7 @@ lesson({id:"s6",group:"c",num:6,lvl:"Statistics · Lesson 6",name:"Hypothesis te
   hand("Two-tail critical region","X ~ B(20, 0.3). Find the critical region for a two-tail test of H₀: p = 0.3 at the 5% level, and its actual significance level.",[
    ["lower tail ≤ 0.025: P(X ≤ 1) = 0.0076, P(X ≤ 2) = 0.0355 ⇒ X ≤ 1",""],
    ["upper tail ≤ 0.025: P(X ≥ 10) = 0.0480, P(X ≥ 11) = 0.0171 ⇒ X ≥ 11",""],
-   {m:"X ≤ 1 or X ≥ 11; actual level = 0.0076 + 0.0171 = 0.0247",ans:true}]),
+   {m:"X ≤ 1 or X ≥ 11; actual level = 0.007637 + 0.017145 = 0.0248",ans:true}]),
   fill("",[
    {q:"For a two-tail test at 10%, each tail has probability at most …",lines:["[[0.05|5%]]"],why:"Halve it."},
    {q:"X ~ B(25, 0.2), H₁: p &gt; 0.2 at 5%. P(X ≥ 9) = 0.0468, P(X ≥ 8) = 0.1091. Critical region:",lines:["X ≥ [[9]]"],why:"Largest region with probability ≤ 0.05."},
@@ -4057,7 +4057,7 @@ lesson({id:"s6",group:"c",num:6,lvl:"Statistics · Lesson 6",name:"Hypothesis te
    {q:"H₁: p &gt; 0.25, n = 20, observed x = 9. Which probability do you compare with the significance level?",opts:["P(X = 9)","P(X ≤ 9)","P(X ≥ 9)","P(X ≤ 8)"],a:2},
    {q:"P(X ≤ 3) = 0.016 and P(X ≤ 4) = 0.051 under H₀. Critical region for H₁: p &lt; p₀ at 5%: X ≤ …",a:3},
    {q:"P(X ≥ x) = 0.032 in a two-tail test at 5%. Conclusion?",opts:["Reject H₀","Do not reject H₀"],a:1,why:"Compare with 0.025."},
-   {q:"The actual significance level of critical region X ≤ 1 or X ≥ 11 when P(X ≤ 1) = 0.0076 and P(X ≥ 11) = 0.0171 is …",a:0.0247,tol:0.0002}]),
+   {q:"The actual significance level of critical region X ≤ 1 or X ≥ 11 when P(X ≤ 1) = 0.007637 and P(X ≥ 11) = 0.017145 is … (3 s.f.)",a:0.0248,tol:0.0001}]),
   B.keypoints(["Hypotheses are about the population parameter p, not the sample.","Two-tail: split the significance level between the tails.","Conclude in context, without saying H₀ is 'proved'."]),
   B.mistakes(["Writing hypotheses in terms of X.","Using P(X = x) instead of a tail probability.","Forgetting to halve the level for a two-tail test."])
  ],onShow:()=>draw()});
@@ -5393,6 +5393,6 @@ window.ALP_ACCOUNTS={sb,merge,stats,get user(){ return user; },get profile(){ re
 <script src="simple-layout.js?v=20261024-all"></script>
 <link rel="stylesheet" href="desktop-units.css?v=20261031-fill">
 <script src="desktop-units.js?v=20261031-fill"></script>
-<script src="lesson-summary.js?v=20261026-summary"></script>
+<script src="lesson-summary.js?v=20261113-review"></script>
 <script src="diagram-fit.js?v=20261025-diagrams"></script>
 </body></html>
